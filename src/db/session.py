@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from utils.py_logger import get_logger
+from src.utils.py_logger import get_logger
 
 logger = get_logger(__name__)
 load_dotenv()

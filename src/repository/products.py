@@ -3,8 +3,8 @@ from typing import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from db.models import Product
-from schemas.products import ProductModel
+from src.db.models import Product
+from src.schemas.products import ProductModel
 
 
 async def get_products(db: AsyncSession) -> Sequence[Product]:

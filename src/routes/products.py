@@ -1,58 +1,63 @@
-from schemas.products import ProductResponse
+from fastapi import APIRouter, HTTPException, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter(tags=["Contacts"], prefix='/contacts')
+from src.conf.messages import ProductMessages
+from src.db.session import get_db
+from src.schemas.products import ProductResponse, ProductModel
+from src.repository import products as repo_products
+
+
+router = APIRouter(tags=["Products"], prefix='/products')
 
 
 @router.get(path="/",
             response_model=list[ProductResponse],
-            summary="Get all contacts")
-async def get_contacts(db: AsyncSession = Depends(get_db)):
-    """Отримати всі контакти."""
-    contacts = await repo_contacts.get_contacts(db)
-    return contacts
+            summary="Get all products")
+async def get_products(db: AsyncSession = Depends(get_db)):
+    """Отримати всі продукти."""
+    products = await repo_products.get_products(db)
+    return products
 
 
-@router.get(path="/{contact_id}",
+@router.get(path="/{product_id}",
             response_model=ProductResponse,
-            summary="Get contact by ID")
-async def get_contact(contact_id: UUID, db: AsyncSession = Depends(get_db)):
-    """Отримати контакт за унікальним ID."""
-    contact = await repo_contacts.get_contact_id(contact_id, db)
-    if contact is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ContactMessages.NOT_FOUND)
-    return contact
+            summary="Get product by ID")
+async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
+    """Отримати продукт за унікальним ID."""
+    product = await repo_products.get_product_id(product_id, db)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
+    return product
 
 
 @router.post(path="/",
              response_model=ProductResponse,
              status_code=status.HTTP_201_CREATED,
-             summary="Create a new contact")
-async def create_contact(body: ContactModel, db: AsyncSession = Depends(get_db)):
-    """Створити новий контакт."""
-    existing_contact = await repo_contacts.get_contact_by_email(str(body.email), db) #TODO
-    if existing_contact:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ContactMessages.EMAIL_ALREADY_EXISTS)
-    contact = await repo_contacts.create_contact(body, db)
-    return contact
+             summary="Create a new product")
+async def create_contact(body: ProductModel, db: AsyncSession = Depends(get_db)):
+    """Створити новий продукт."""
+
+    product = await repo_products.create_product(body, db)
+    return product
 
 
-@router.put(path="/{contact_id}",
-            response_model=ContactResponse,
-            summary="Update contact by ID")
-async def update_contact(body: ContactModel, contact_id: UUID, db: AsyncSession = Depends(get_db)):
-    """Оновити контакт за його унікальним ID."""
-    contact = await repo_contacts.update_contact(contact_id, body, db)
-    if contact is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ContactMessages.NOT_FOUND)
-    return contact
+@router.put(path="/{product_id}",
+            response_model=ProductResponse,
+            summary="Update product by ID")
+async def update_contact(body: ProductModel, product_id: int, db: AsyncSession = Depends(get_db)):
+    """Оновити продукт за його унікальним ID."""
+    product = await repo_products.update_product(product_id, body, db)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
+    return product
 
 
-@router.delete(path="/{contact_id}",
+@router.delete(path="/{product_id}",
                response_model=dict,
-               summary="Delete contact by ID")
-async def delete_contact(contact_id: UUID, db: AsyncSession = Depends(get_db)):
-    """Видалити контакт за його унікальним ID."""
-    contact = await repo_contacts.delete_contact(contact_id, db)
-    if contact is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ContactMessages.NOT_FOUND)
-    return {"detail": ContactMessages.DELETED_CONTACT}
+               summary="Delete product by ID")
+async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
+    """Видалити продукт за його унікальним ID."""
+    product = await repo_products.delete_product(product_id, db)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
+    return {"detail": ProductMessages.DELETED_PRODUCT}
