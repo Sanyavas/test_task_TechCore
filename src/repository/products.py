@@ -48,6 +48,7 @@ async def create_product(body: ProductModel, db: AsyncSession) -> Product:
     db.add(product)
     await db.commit()
     await db.refresh(product)
+    logger.info(f"Product created in the database.")
 
     return product
 
@@ -91,10 +92,10 @@ async def fetch_and_update_products(external_ids: list[str | int], db: AsyncSess
 
     for result in results:
         print(result, type(result))
-        # Перевірка, чи результат є списком з одним елементом
+
         if isinstance(result, list) and len(result) == 1:
-            product = result[0]  # витягнути перший елемент списку
-            # Перевірка, чи це словник
+            product = result[0]
+
             if isinstance(product, dict):
                 external_id = product.get("external_id")
                 name = product.get("name")

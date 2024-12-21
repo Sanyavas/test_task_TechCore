@@ -15,7 +15,7 @@ async def fetch_product_from_api(external_id: str) -> Any:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"https://my-json-server.typicode.com/Sanyavas/test_items/products/?external_id={external_id}")
             # response = await client.get(f"https://jsonplaceholder.typicode.com/posts/{external_id}")
-            response.raise_for_status()  # Перевірка на наявність помилок HTTP
+            response.raise_for_status()
             data = response.json()
             if not data:
                 raise HTTPException(status_code=404, detail=f"Product with ID {external_id} not found.")
