@@ -166,3 +166,4 @@ cython_debug/
 /for_test.py
 /logs/
 /db_init.py
+/test.db

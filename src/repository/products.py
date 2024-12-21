@@ -91,7 +91,6 @@ async def fetch_and_update_products(external_ids: list[str | int], db: AsyncSess
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     for external_id, result in zip(external_ids, results):
-        print(result, type(result))
 
         if isinstance(result, Exception):
             logger.error(f"Error fetching product with external_id: {external_id} - {result}")

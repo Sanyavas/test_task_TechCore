@@ -39,6 +39,19 @@ async def get_all_fetch_external_product():
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+@router.post("/fetch_external/",
+             summary="Fetch and update external products",
+             status_code=status.HTTP_201_CREATED)
+async def fetch_external_products(external_ids: list[Union[str, int]] = [101, "105", 120], db: AsyncSession = Depends(get_db)):
+    """Створює або оновлює записи в БД."""
+
+    if not external_ids:
+        raise HTTPException(status_code=400, detail="No external_ids provided")
+
+    await repo_products.fetch_and_update_products(external_ids, db)
+    return {"message": "Products updated successfully"}
+
+
 @router.get(path="/{product_id}",
             response_model=ProductResponse,
             summary="Get product by ID")
@@ -84,19 +97,6 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
     if product is None:  # Якщо None або False
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
     return {"detail": ProductMessages.DELETED_PRODUCT}
-
-
-@router.post("/fetch_external/",
-             summary="Fetch and update external products",
-             status_code=status.HTTP_201_CREATED)
-async def fetch_external_products(external_ids: list[Union[str, int]] = [101, "105", 120], db: AsyncSession = Depends(get_db)):
-    """Створює або оновлює записи в БД."""
-
-    if not external_ids:
-        raise HTTPException(status_code=400, detail="No external_ids provided")
-
-    await repo_products.fetch_and_update_products(external_ids, db)
-    return {"message": "Products updated successfully"}
 
 
 @router.post("/refresh_all/",
