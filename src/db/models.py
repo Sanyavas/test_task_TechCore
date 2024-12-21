@@ -12,7 +12,7 @@ class Product(Base):
     product_id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String())
     description: Mapped[str] = mapped_column(String())
-    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, unique=True)  # Використано Numeric для ціни
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, unique=False)
     external_id: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column('created_at', DateTime, default=func.now())
     updated_at: Mapped[datetime] = mapped_column('updated_at', DateTime, default=func.now(), onupdate=func.now())

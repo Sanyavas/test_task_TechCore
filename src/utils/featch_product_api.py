@@ -23,6 +23,7 @@ async def fetch_product_from_api(external_id: str = None) -> Any:
                     raise HTTPException(status_code=404, detail=f"Product with ID {external_id} not found.")
                 else:
                     raise HTTPException(status_code=404, detail="No products found.")
+            print(f"{data}")
             return data
 
     except httpx.HTTPStatusError as http_err:
