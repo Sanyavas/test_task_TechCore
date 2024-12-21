@@ -90,37 +90,38 @@ async def fetch_and_update_products(external_ids: list[str | int], db: AsyncSess
     tasks = [fetch_product_from_api(str(external_id)) for external_id in external_ids]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    for result in results:
+    for external_id, result in zip(external_ids, results):
         print(result, type(result))
+
+        if isinstance(result, Exception):
+            logger.error(f"Error fetching product with external_id: {external_id} - {result}")
+            continue
 
         if isinstance(result, list) and len(result) == 1:
             product = result[0]
 
-            if isinstance(product, dict):
-                external_id = product.get("external_id")
-                name = product.get("name")
-                description = product.get("description")
-                price = product.get("price")
+            name = product.get("name")
+            description = product.get("description")
+            price = product.get("price")
 
-                # Перевірка та оновлення або створення продукту
-                result = await db.execute(select(Product).filter_by(external_id=external_id))
-                existing_product = result.scalar_one_or_none()
+            # Перевірка та оновлення або створення продукту
+            query_result = await db.execute(select(Product).filter_by(external_id=external_id))
+            existing_product = query_result.scalar_one_or_none()
 
-                if existing_product:
-                    existing_product.name = name
-                    existing_product.description = description
-                    existing_product.price = price
-                    logger.info(f"Product with external_id {external_id} updated in DB")
-                else:
-                    new_product = Product(external_id=external_id, name=name, description=description, price=price)
-                    db.add(new_product)
-                    logger.info(f"Product with external_id {external_id} added in DB")
+            if existing_product:
+                existing_product.name = name
+                existing_product.description = description
+                existing_product.price = price
+                logger.info(f"Product with external_id {external_id} updated in DB")
             else:
-                logger.error(f"Error: Expected a dictionary for external_id: {external_id}, got: {product}")
+                new_product = Product(external_id=external_id, name=name, description=description, price=price)
+                db.add(new_product)
+                logger.info(f"Product with external_id {external_id} added in DB")
         else:
-            logger.error(f"Error: Unexpected data structure for external_id: {external_id}, got: {result}")
+            logger.error(f"Error: Unexpected data structure for external_id {external_id}, got: {result}")
 
     await db.commit()
+
 
 
 async def fetch_and_update_products_in_background(external_ids: list[int], db: AsyncSession):
