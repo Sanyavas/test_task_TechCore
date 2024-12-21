@@ -8,17 +8,21 @@ from src.utils.py_logger import get_logger
 logger = get_logger(__name__)
 
 
-async def fetch_product_from_api(external_id: str) -> Any:
+async def fetch_product_from_api(external_id: str = None) -> Any:
     """Отримання продукту з зовнішнього API."""
-
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"https://my-json-server.typicode.com/Sanyavas/test_items/products/?external_id={external_id}")
-            # response = await client.get(f"https://jsonplaceholder.typicode.com/posts/{external_id}")
+            if external_id:
+                response = await client.get(f"https://my-json-server.typicode.com/Sanyavas/test_items/products/?external_id={external_id}")
+            else:
+                response = await client.get(f"https://my-json-server.typicode.com/Sanyavas/test_items/products")
             response.raise_for_status()
             data = response.json()
             if not data:
-                raise HTTPException(status_code=404, detail=f"Product with ID {external_id} not found.")
+                if external_id:
+                    raise HTTPException(status_code=404, detail=f"Product with ID {external_id} not found.")
+                else:
+                    raise HTTPException(status_code=404, detail="No products found.")
             return data
 
     except httpx.HTTPStatusError as http_err:

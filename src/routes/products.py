@@ -24,6 +24,20 @@ async def get_products(db: AsyncSession = Depends(get_db)):
     return products
 
 
+@router.get("/fetch_external/", summary="Fetch all external products")
+async def get_all_fetch_external_product():
+    """Отримання всіх продуктів із зовнішнього API"""
+    try:
+        products = await fetch_product_from_api()
+        if not products:
+            raise HTTPException(status_code=404, detail="No products found.")
+        return {"message": products}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
 @router.get(path="/{product_id}",
             response_model=ProductResponse,
             summary="Get product by ID")
@@ -72,8 +86,9 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/fetch_external/",
-             summary="Fetch external products")
-async def fetch_external_products(external_ids: list[Union[str, int]], db: AsyncSession = Depends(get_db)):
+             summary="Fetch external products",
+             status_code=status.HTTP_201_CREATED)
+async def fetch_external_products(external_ids: list[Union[str, int]] = [101, "105", 120], db: AsyncSession = Depends(get_db)):
     """Створює або оновлює записи в БД."""
 
     if not external_ids:
@@ -83,18 +98,9 @@ async def fetch_external_products(external_ids: list[Union[str, int]], db: Async
     return {"message": "Products updated successfully"}
 
 
-@router.get("/fetch_external/",
-             summary="get Fetch external products")
-async def get_fetch_external_product(external_id: str):
-    if not external_id:
-        raise HTTPException(status_code=400, detail="No external_id provided")
-
-    product = await fetch_product_from_api(external_id)
-
-    return {"message": product}
-
-
-@router.post("/refresh_all/", summary="Refresh all product data")
+@router.post("/refresh_all/",
+             summary="Refresh all product data",
+             status_code=status.HTTP_201_CREATED)
 async def refresh_all_products(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     """Запуск фонової задачі з оновлення всіх продуктів."""
 
