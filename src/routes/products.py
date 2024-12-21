@@ -24,7 +24,8 @@ async def get_products(db: AsyncSession = Depends(get_db)):
     return products
 
 
-@router.get("/fetch_external/", summary="Fetch all external products")
+@router.get("/fetch_external/",
+            summary="Get all external products")
 async def get_all_fetch_external_product():
     """Отримання всіх продуктів із зовнішнього API"""
     try:
@@ -86,7 +87,7 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/fetch_external/",
-             summary="Fetch external products",
+             summary="Fetch and update external products",
              status_code=status.HTTP_201_CREATED)
 async def fetch_external_products(external_ids: list[Union[str, int]] = [101, "105", 120], db: AsyncSession = Depends(get_db)):
     """Створює або оновлює записи в БД."""
