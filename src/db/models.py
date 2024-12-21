@@ -10,7 +10,7 @@ class Product(Base):
     __tablename__ = 'products'
 
     product_id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String())
     description: Mapped[str] = mapped_column(String())
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, unique=True)  # Використано Numeric для ціни
     external_id: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Union
+
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.conf.messages import ProductMessages
 from src.db.session import get_db
 from src.schemas.products import ProductResponse, ProductModel
 from src.repository import products as repo_products
-
+from src.utils.featch_product_api import fetch_product_from_api
 
 router = APIRouter(tags=["Products"], prefix='/products')
 
@@ -15,7 +17,10 @@ router = APIRouter(tags=["Products"], prefix='/products')
             summary="Get all products")
 async def get_products(db: AsyncSession = Depends(get_db)):
     """Отримати всі продукти."""
-    products = await repo_products.get_products(db)
+
+    products = await repo_products.get_all_products(db)
+    if products is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
     return products
 
 
@@ -24,6 +29,7 @@ async def get_products(db: AsyncSession = Depends(get_db)):
             summary="Get product by ID")
 async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     """Отримати продукт за унікальним ID."""
+
     product = await repo_products.get_product_id(product_id, db)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
@@ -46,6 +52,7 @@ async def create_contact(body: ProductModel, db: AsyncSession = Depends(get_db))
             summary="Update product by ID")
 async def update_contact(body: ProductModel, product_id: int, db: AsyncSession = Depends(get_db)):
     """Оновити продукт за його унікальним ID."""
+
     product = await repo_products.update_product(product_id, body, db)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
@@ -57,7 +64,44 @@ async def update_contact(body: ProductModel, product_id: int, db: AsyncSession =
                summary="Delete product by ID")
 async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
     """Видалити продукт за його унікальним ID."""
+
     product = await repo_products.delete_product(product_id, db)
-    if product is None:
+    if product is None:  # Якщо None або False
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ProductMessages.NOT_FOUND)
     return {"detail": ProductMessages.DELETED_PRODUCT}
+
+
+@router.post("/fetch_external/",
+             summary="Fetch external products")
+async def fetch_external_products(external_ids: list[Union[str, int]], db: AsyncSession = Depends(get_db)):
+    """Створює або оновлює записи в БД."""
+
+    if not external_ids:
+        raise HTTPException(status_code=400, detail="No external_ids provided")
+
+    await repo_products.fetch_and_update_products(external_ids, db)
+    return {"message": "Products updated successfully"}
+
+
+@router.get("/fetch_external/",
+             summary="get Fetch external products")
+async def get_fetch_external_product(external_id: str):
+    if not external_id:
+        raise HTTPException(status_code=400, detail="No external_id provided")
+
+    product = await fetch_product_from_api(external_id)
+
+    return {"message": product}
+
+
+@router.post("/refresh_all/", summary="Refresh all product data")
+async def refresh_all_products(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    """Запуск фонової задачі з оновлення всіх продуктів."""
+
+    external_ids = await repo_products.get_all_id_of_products(db)
+    if not external_ids:
+        raise HTTPException(status_code=400, detail="No products found in the database")
+
+    background_tasks.add_task(repo_products.fetch_and_update_products_in_background, external_ids, db)
+
+    return {"message": "Product update task has been started in the background"}

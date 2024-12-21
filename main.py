@@ -1,23 +1,41 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.session import get_db
+from src.db.session import get_db, init_db
 from src.routes import products
 from src.utils.py_logger import get_logger
 
 logger = get_logger(__name__)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await init_db() # створення таблиць у БД
+    yield
+
+app = FastAPI(lifespan=lifespan)
 logger.info("App is starting..")
 
 app.include_router(products.router)
 
-# @app.get("/")
-# def root():
-#     return {"message": "Welcome to FastAPI!"}
+origins = [
+    "http://localhost"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "PUT", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def healthchecker_db(db: AsyncSession = Depends(get_db)):
@@ -33,4 +51,4 @@ async def healthchecker_db(db: AsyncSession = Depends(get_db)):
 
 
 if __name__ == '__main__':
-    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8002, reload=True)

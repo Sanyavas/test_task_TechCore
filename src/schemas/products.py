@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 class ProductModel(BaseModel):
 
     product_id: int
-    name: str = Field(min_length=1, max_length=50)
-    description: str = Field(max_length=1024)
+    name: str
+    description: str
     price: Decimal
     external_id: int
 
