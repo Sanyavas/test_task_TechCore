@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 
 class ProductModel(BaseModel):
 
-    product_id: int
     name: str
     description: str
     price: Decimal
