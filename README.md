@@ -3,7 +3,7 @@
 - Инструкции по запуску (например, с помощью команды):
    ```bash
    pip install -r requirements.txt
-   uvicorn app.main:app --reload
+   uvicorn main:app --reload
 
 ## Цель
 Разработать небольшое асинхронное веб-приложение на базе FastAPI, которое будет:
